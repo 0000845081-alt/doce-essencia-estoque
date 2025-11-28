@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Doce Essência — Sistema</title>
+<link rel="manifest" href="manifest.json" />
+<meta name="theme-color" content="#f06292" />
+<!-- Tailwind CDN (rápido para protótipo) -->
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --pink:#f06292; --green:#81c784; --bg:#f7f7f9; --card:#ffffff;
+  }
+  [data-theme="dark"]{
+    --bg:#0b1020; --card:#081028; --text:#e6eef8;
+  }
+  body{font-family:'Inter',sans-serif;background:var(--bg);color:inherit}
+  .card{background:var(--card);border-radius:12px;box-shadow:0 6px 20px rgba(0,0,0,0.06);padding:16px}
+  .btn-prim{background:var(--pink);color:white;padding:8px 12px;border-radius:8px}
+  .btn-sec{background:var(--green);color:white;padding:8px 12px;border-radius:8px}
+  .low-badge{background:#fff5f6;color:#b91c1c;padding:6px 10px;border-radius:8px;font-weight:600}
+  .hidden{display:none}
+  a{text-decoration:none}
+  .small{font-size:0.9rem;color:gray}
+</style>
+</head>
+<body data-theme="light" class="p-6">
+
+<div class="max-w-6xl mx-auto">
+
+  <!-- HEADER -->
+  <header class="flex items-center justify-between mb-6">
+    <div>
+      <h1 class="text-3xl font-extrabold text-[#e91e63]">Doce Essência</h1>
+      <p class="small">Controle de Estoque • PWA • Admin</p>
+    </div>
+    <div class="flex items-center gap-4">
+      <button id="theme-toggle" class="px-3 py-2 rounded-md small">🌙 Tema</button>
+      <div id="auth-actions" class="flex items-center gap-2"></div>
+    </div>
+  </header>
+
+  <!-- AUTH SCREENS -->
+  <main id="app-root">
+    <section id="auth-screen" class="card max-w-md mx-auto">
+      <h2 class="text-xl font-bold mb-2">Entrar</h2>
+      <div id="auth-msg" class="small mb-2"></div>
+      <input id="email" placeholder="Email" class="w-full p-2 border rounded mb-2" />
+      <input id="password" placeholder="Senha" type="password" class="w-full p-2 border rounded mb-2" />
+      <div class="flex gap-2">
+        <button id="btn-login" class="btn-prim w-full">Entrar</button>
+        <button id="btn-show-signup" class="w-full px-3 py-2 border rounded">Cadastrar</button>
+      </div>
+      <hr class="my-3"/>
+      <p class="small">Ou use o modo offline de demonstração (dados salvos localmente).</p>
+      <div class="flex gap-2 mt-3">
+        <button id="btn-offline" class="w-full px-3 py-2 border rounded">Abrir modo offline</button>
+      </div>
+    </section>
+
+    <section id="signup-screen" class="card max-w-md mx-auto hidden">
+      <h2 class="text-xl font-bold mb-2">Criar Conta</h2>
+      <div id="signup-msg" class="small mb-2"></div>
+      <input id="su-email" placeholder="Email" class="w-full p-2 border rounded mb-2" />
+      <input id="su-password" placeholder="Senha (min 6)" type="password" class="w-full p-2 border rounded mb-2" />
+      <div class="flex gap-2">
+        <button id="btn-signup" class="btn-prim w-full">Cadastrar</button>
+        <button id="btn-back-login" class="w-full px-3 py-2 border rounded">Voltar</button>
+      </div>
+    </section>
+  </main>
+
+  <!-- DASHBOARD (após login / offline) -->
+  <div id="dashboard" class="hidden">
+
+    <!-- ALERTS -->
+    <div id="alerts" class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+      <!-- cards dinâmicos -->
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+      <!-- COLUNA LATERAL: Adicionar Produto / Financeiro rápido -->
+      <div class="col-span-1 card">
+        <h3 class="font-bold">➕ Adicionar Produto</h3>
+        <input id="p-name" placeholder="Nome do produto" class="w-full p-2 border rounded mt-2" />
+        <input id="p-cat" placeholder="Categoria" class="w-full p-2 border rounded mt-2" />
+        <div class="flex gap-2 mt-2">
+          <input id="p-stock" type="number" placeholder="Estoque" class="w-1/2 p-2 border rounded" />
+          <input id="p-min" type="number" placeholder="Estoque mínimo" class="w-1/2 p-2 border rounded" />
+        </div>
+        <input id="p-price" type="number" step="0.01" placeholder="Preço (R$)" class="w-full p-2 border rounded mt-2" />
+        <button id="btn-add-product" class="btn-prim w-full mt-3">Salvar produto</button>
+
+        <hr class="my-4" />
+        <h3 class="font-bold">💸 Lançamento Rápido</h3>
+        <select id="txn-type" class="w-full p-2 border rounded mt-2">
+          <option value="sale">Venda (reduz estoque)</option>
+          <option value="purchase">Compra (aumenta estoque)</option>
+          <option value="expense">Despesa (financeiro)</option>
+          <option value="income">Receita (financeiro)</option>
+        </select>
+        <input id="txn-product" placeholder="Produto (nome)" class="w-full p-2 border rounded mt-2" />
+        <div class="flex gap-2 mt-2">
+          <input id="txn-qty" type="number" placeholder="Qtd" class="w-1/2 p-2 border rounded" />
+          <input id="txn-amount" type="number" step="0.01" placeholder="Valor R$" class="w-1/2 p-2 border rounded" />
+        </div>
+        <button id="btn-add-txn" class="btn-sec w-full mt-3">Registrar lançamento</button>
+      </div>
+
+      <!-- TABELA INVENTÁRIO -->
+      <div class="col-span-2 card">
+        <div class="flex justify-between items-center mb-4">
+          <h3 class="font-bold text-lg">📦 Inventário</h3>
+          <div class="flex gap-2">
+            <button id="btn-export-inv" class="px-3 py-2 border rounded small">Exportar CSV</button>
+            <button id="btn-export-txns" class="px-3 py-2 border rounded small">Exportar Transações</button>
+            <button id="btn-admin" class="px-3 py-2 border rounded small hidden">Admin</button>
+          </div>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full">
+            <thead class="small">
+              <tr><th class="text-left">Produto</th><th>Estoque</th><th>Mín</th><th>Preço</th><th>Ações</th></tr>
+            </thead>
+            <tbody id="inventory-body"></tbody>
+          </table>
+        </div>
+
+        <hr class="my-4" />
+        <h4 class="font-semibold">Resumo Financeiro</h4>
+        <p class="small">Saldo: <span id="balance">R$ 0,00</span></p>
+        <div id="recent-txns" class="mt-2 small"></div>
+      </div>
+    </div>
+
+    <!-- ADMIN PANEL -->
+    <div id="admin-panel" class="card mt-6 hidden">
+      <h3 class="font-bold">🔒 Painel Administrativo</h3>
+      <p class="small mb-2">Usuários administradores: (configurado localmente)</p>
+      <ul id="admin-list" class="small"></ul>
+      <hr class="my-3" />
+      <h4 class="font-semibold">Ações</h4>
+      <button id="btn-clear-data" class="px-3 py-2 border rounded mt-2">Limpar dados locais (cuidado)</button>
+    </div>
+
+  </div>
+
+  <footer class="small text-center mt-6">Doce Essência — Sistema — protótipo</footer>
+</div>
+
+<!-- Firebase SDKs (modular) -->
+<script type="module">
+/*
+  INSTRUÇÕES:
+  - Coloque suas credenciais em firebase-config.js como window.__FIREBASE_CONFIG = { ... }
+  - Se não houver esse arquivo ou as credenciais estiverem com valor REPLACE, o app cai pro modo local (localStorage).
+*/
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+import { getFirestore, collection, addDoc, doc, setDoc, getDocs, query, where, updateDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+let useFirestore = false;
+let db = null;
+let auth = null;
+
+function loadFirebaseConfig(){
+  try {
+    // arquivo firebase-config.js deve definir window.__FIREBASE_CONFIG
+    if (window.__FIREBASE_CONFIG && window.__FIREBASE_CONFIG.apiKey && window.__FIREBASE_CONFIG.apiKey !== "REPLACE_WITH_YOUR_API_KEY") {
+      const app = initializeApp(window.__FIREBASE_CONFIG);
+      auth = getAuth(app);
+      db = getFirestore(app);
+      useFirestore = true;
+      console.log("Firebase inicializado (Firestore habilitado).");
+    } else {
+      console.log("Firebase não configurado ou placeholders detectados. Usando modo local (localStorage).");
+    }
+  } catch (e) {
+    console.warn("Erro ao inicializar Firebase:", e);
+  }
+}
+loadFirebaseConfig();
+
+/* ---------- Dados / modelo (usa Firestore quando disponível, senão localStorage) ---------- */
+
+const STORAGE_KEYS = { INVENTORY: 'doce:inventory', TXNS: 'doce:txns', CONFIG: 'doce:config' };
+const ADMINS = ['admin@doceessencia.com']; // Defina aqui os emails que terão acesso admin automaticamente
+
+function readLocal(key){ try { return JSON.parse(localStorage.getItem(key) || '[]'); } catch(e){ return []; } }
+function writeLocal(key, val){ localStorage.setItem(key, JSON.stringify(val)); }
+
+// Estrutura: produto {id, name, category, stock, minStock, price}
+// transação {id, type, productName, qty, amount, date, note}
+
+function uid(){ return Math.random().toString(36).slice(2,10); }
+
+/* ---------- UI helpers ---------- */
+const el = id => document.getElementById(id);
+function formatCurrency(v){ return new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(Number(v||0)); }
+function show(node) { node.classList.remove('hidden'); }
+function hide(node) { node.classList.add('hidden'); }
+
+/* ---------- AUTH (email/senha) ---------- */
+const authActions = el('auth-actions');
+const authScreen = el('auth-screen');
+const signupScreen = el('signup-screen');
+const dashboard = el('dashboard');
+const adminPanel = el('admin-panel');
+
+el('btn-show-signup').onclick = ()=>{ hide(authScreen); show(signupScreen); }
+el('btn-back-login').onclick = ()=>{ show(authScreen); hide(signupScreen); }
+
+el('btn-offline').onclick = ()=>{ // abrir modo local
+  showAppForUser({email:'offline@local', uid:'local'});
+};
+el('btn-login').onclick = async ()=>{
+  const email = el('email').value.trim();
+  const pass = el('password').value;
+  if (!email || !pass) { el('auth-msg').textContent = 'Preencha email e senha.'; return; }
+  if (useFirestore && auth){
+    try {
+      await signInWithEmailAndPassword(auth, email, pass);
+    } catch(e){
+      el('auth-msg').textContent = e.message || e;
+    }
+  } else {
+    // modo local fake: aceita se existir user local
+    const users = JSON.parse(localStorage.getItem('doce:users')||'[]');
+    const found = users.find(u=>u.email===email && u.password===pass);
+    if (found) showAppForUser(found);
+    else el('auth-msg').textContent = 'Usuário local não encontrado. Cadastre-se ou use modo offline.';
+  }
+};
+el('btn-signup').onclick = async ()=>{
+  const email = el('su-email').value.trim(); const pass = el('su-password').value;
+  if (!email || !pass || pass.length<6) { el('signup-msg').textContent='Email e senha (>=6) são obrigatórios.'; return; }
+  if (useFirestore && auth){
+    try {
+      const userCred = await createUserWithEmailAndPassword(auth, email, pass);
+      // opcional: criar perfil no Firestore
+      showAppForUser({email:userCred.user.email, uid:userCred.user.uid});
+    } catch(e){ el('signup-msg').textContent = e.message || e; }
+  } else {
+    const users = JSON.parse(localStorage.getItem('doce:users')||'[]');
+    users.push({email, password:pass, uid: uid()});
+    localStorage.setItem('doce:users', JSON.stringify(users));
+    showAppForUser({email, uid: users[users.length-1].uid});
+  }
+};
+
+// logout
+function renderAuthButtons(user){
+  authActions.innerHTML = '';
+  const btn = document.createElement('button'); btn.className='px-3 py-2 border rounded small';
+  btn.textContent = user ? 'Sair' : 'Entrar';
+  btn.onclick = ()=>{
+    if (user) {
+      if (useFirestore && auth) signOut(auth);
+      // limpar UI
+      location.reload();
+    } else {
+      // voltar para auth
+      show(authScreen); hide(dashboard);
+    }
+  };
+  authActions.appendChild(btn);
+}
+
+/* ---------- UI: show app, render inventory, alerts ---------- */
+
+function showAppForUser(user){
+  hide(authScreen); hide(signupScreen);
+  show(dashboard);
+  renderAuthButtons(user);
+  el('btn-admin').classList.toggle('hidden', !ADMINS.includes(user.email));
+  if (ADMINS.includes(user.email)) show(el('btn-admin'));
+  currentUser = user;
+  renderInventory();
+  renderAlerts();
+  renderTxns();
+  if (ADMINS.includes(user.email)) showAdmin();
+}
+
+let currentUser = null;
+
+function getInventory(){
+  if (useFirestore && db){
+    // para simplificar: Firestore live sync não implementada aqui (padrão: local)
+    return readLocal(STORAGE_KEYS.INVENTORY);
+  } else {
+    return readLocal(STORAGE_KEYS.INVENTORY);
+  }
+}
+function saveInventory(arr){
+  if (useFirestore && db){
+    // ideal: salvar em Firestore — deixamos para depois; por ora salvar local
+    writeLocal(STORAGE_KEYS.INVENTORY, arr);
+  } else writeLocal(STORAGE_KEYS.INVENTORY, arr);
+}
+
+function getTxns(){ return readLocal(STORAGE_KEYS.TXNS); }
+function saveTxns(arr){ writeLocal(STORAGE_KEYS.TXNS, arr); }
+
+function renderInventory(){
+  const tbody = el('inventory-body'); tbody.innerHTML = '';
+  const inv = getInventory();
+  if (inv.length===0) tbody.innerHTML = '<tr><td colspan="5" class="small p-4 text-center">Nenhum produto cadastrado.</td></tr>';
+  inv.forEach(p=>{
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${p.name}</td><td class="${p.stock <= p.minStock ? 'font-bold text-red-600':''}">${p.stock}</td><td>${p.minStock}</td><td>${formatCurrency(p.price)}</td>
+      <td>
+        <button class="px-2 py-1 border rounded small" onclick="openUpdateStock('${p.id}')">Atualizar</button>
+        <button class="px-2 py-1 border rounded small" onclick="deleteProduct('${p.id}')">Excluir</button>
+      </td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+function renderAlerts(){
+  const root = el('alerts'); root.innerHTML = '';
+  const inv = getInventory();
+  const low = inv.filter(p=>p.stock <= p.minStock);
+  if (low.length===0){ root.innerHTML = `<div class="card"> <p class="small">Nenhum alerta de estoque baixo.</p></div>`; return; }
+  low.forEach(p=>{
+    const div = document.createElement('div');
+    div.className='card';
+    div.innerHTML = `<div class="flex justify-between items-center"><div><p class="font-semibold text-red-600">${p.name}</p><p class="small">Estoque: ${p.stock} — Mín: ${p.minStock}</p></div><div><button class="px-3 py-2 border rounded small" onclick="openQuickAdd('${p.id}')">Dar Entrada</button></div></div>`;
+    root.appendChild(div);
+  });
+}
+
+function renderTxns(){
+  const txns = getTxns();
+  let balance = 0;
+  const recent = txns.slice(-5).reverse();
+  recent.forEach(t=>{
+    if (t.type === 'sale' || t.type === 'expense') balance -= Number(t.amount || 0);
+    else balance += Number(t.amount || 0);
+  });
+  el('balance').textContent = formatCurrency(balance);
+  const recentEl = el('recent-txns'); recentEl.innerHTML = recent.map(t=>`<div>${(new Date(t.date)).toLocaleString()} — ${t.type} — ${t.productName||t.note||''} — ${formatCurrency(t.amount||0)}</div>`).join('');
+}
+
+/* ---------- Actions: add product, update stock, delete ---------- */
+
+el('btn-add-product').onclick = ()=>{
+  const name = el('p-name').value.trim();
+  if (!name) return alert('Nome obrigatório');
+  const product = {
+    id: uid(), name,
+    category: el('p-cat').value || 'Geral',
+    stock: Number(el('p-stock').value) || 0,
+    minStock: Number(el('p-min').value) || 1,
+    price: Number(el('p-price').value) || 0
+  };
+  const inv = getInventory(); inv.push(product); saveInventory(inv);
+  renderInventory(); renderAlerts();
+  el('p-name').value=''; el('p-cat').value=''; el('p-stock').value=''; el('p-min').value=''; el('p-price').value='';
+};
+
+window.openUpdateStock = function(id){
+  const inv = getInventory(); const p = inv.find(x=>x.id===id);
+  const q = prompt(`Atualizar estoque de ${p.name}. Informe quantidade (use negativo para reduzir):`, '0');
+  if (q === null) return;
+  const delta = Number(q);
+  p.stock = Number(p.stock) + delta;
+  if (p.stock < 0) p.stock = 0;
+  saveInventory(inv); renderInventory(); renderAlerts();
+};
+
+window.deleteProduct = function(id){
+  if (!confirm('Excluir este produto?')) return;
+  let inv = getInventory(); inv = inv.filter(x=>x.id!==id); saveInventory(inv); renderInventory(); renderAlerts();
+};
+
+window.openQuickAdd = function(id){
+  const qty = prompt('Quantidade para entrada:', '1');
+  if (qty===null) return;
+  const inv = getInventory(); const p = inv.find(x=>x.id===id);
+  p.stock = Number(p.stock) + Number(qty);
+  saveInventory(inv); renderInventory(); renderAlerts();
+};
+
+/* ---------- Transactions (financeiro) ---------- */
+
+el('btn-add-txn').onclick = ()=>{
+  const type = el('txn-type').value;
+  const productName = el('txn-product').value.trim();
+  const qty = Number(el('txn-qty').value) || 0;
+  const amount = Number(el('txn-amount').value) || 0;
+  const tx = { id: uid(), type, productName, qty, amount, date: Date.now(), note: '' };
+  // efeitos no estoque
+  const inv = getInventory();
+  if (type === 'sale'){
+    const prod = inv.find(p=>p.name === productName);
+    if (!prod){ if(!confirm('Produto não encontrado no inventário. Registrar mesmo assim?')) return; }
+    else {
+      if (prod.stock < qty){ if(!confirm(`Estoque insuficiente (${prod.stock}). Registrar assim mesmo?`)) return; }
+      prod.stock = Math.max(0, prod.stock - qty);
+    }
+    saveInventory(inv);
+  } else if (type === 'purchase'){
+    const prod = inv.find(p=>p.name === productName);
+    if (prod) prod.stock = Number(prod.stock) + qty;
+    else {
+      // cria produto rápido
+      inv.push({ id: uid(), name: productName, category:'Compras', stock: qty, minStock:1, price: amount });
+    }
+    saveInventory(inv);
+  }
+  const txns = getTxns(); txns.push(tx); saveTxns(txns);
+  renderInventory(); renderAlerts(); renderTxns();
+  el('txn-product').value=''; el('txn-qty').value=''; el('txn-amount').value='';
+};
+
+/* ---------- Reports: export CSV ---------- */
+
+function toCSV(rows, headers){
+  const esc = v => `"${String(v||'').replace(/"/g,'""')}"`;
+  const lines = [headers.map(esc).join(',')].concat(rows.map(r => headers.map(h => esc(r[h]||'')).join(',')));
+  return lines.join('\n');
+}
+el('btn-export-inv').onclick = ()=>{
+  const inv = getInventory();
+  const rows = inv.map(p=>({ name:p.name, category:p.category, stock:p.stock, minStock:p.minStock, price:p.price }));
+  const csv = toCSV(rows, ['name','category','stock','minStock','price']);
+  downloadFile(csv, 'inventory.csv');
+};
+el('btn-export-txns').onclick = ()=>{
+  const txns = getTxns();
+  const rows = txns.map(t=>({ date: new Date(t.date).toLocaleString(), type:t.type, productName:t.productName, qty:t.qty, amount:t.amount }));
+  const csv = toCSV(rows, ['date','type','productName','qty','amount']);
+  downloadFile(csv, 'transactions.csv');
+};
+
+function downloadFile(content, filename){
+  const blob = new Blob([content], {type:'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url; a.download = filename; document.body.appendChild(a); a.click(); a.remove();
+}
+
+/* ---------- Admin panel ---------- */
+el('btn-admin').onclick = ()=>{ showAdmin(); };
+
+function showAdmin(){
+  show(adminPanel);
+  const list = ADMINS.map(a=>`<li>${a}</li>`).join('');
+  el('admin-list').innerHTML = list;
+  el('btn-clear-data').onclick = ()=>{
+    if (!confirm('Confirma limpar todo o armazenamento local?')) return;
+    localStorage.clear(); location.reload();
+  };
+}
+
+/* ---------- Theme toggle ---------- */
+el('theme-toggle').onclick = ()=>{
+  const root = document.body;
+  const cur = root.getAttribute('data-theme') || 'light';
+  const nx = cur === 'light' ? 'dark' : 'light';
+  root.setAttribute('data-theme', nx);
+  el('theme-toggle').textContent = nx === 'dark' ? '☀️ Claro' : '🌙 Escuro';
+};
+
+/* ---------- Init: if Firebase auth state changes, show app ---------- */
+if (useFirestore && auth){
+  onAuthStateChanged(auth, (user)=>{
+    if (user) showAppForUser({ email: user.email, uid: user.uid });
+    else { /* permanecemos na tela de login */ }
+  });
+} else {
+  // modo local: tenta manter usuário local se gravado
+  const lastUser = JSON.parse(localStorage.getItem('doce:lastUser')||'null');
+  if (lastUser) showAppForUser(lastUser);
+}
+
+// Expor para debug no console
+window._doce = { getInventory, saveInventory, getTxns, saveTxns };
+
+</script>
+</body>
+</html>
